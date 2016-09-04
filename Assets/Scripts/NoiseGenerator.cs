@@ -5,26 +5,7 @@ using LibNoise.Unity.Generator;
 
 public class NoiseGenerator {
 
-	public float[,] GenerateNoise(NoiseType type, int width, int height, float frequency, float lacunarity,
-		float persistence, int octaves, int seed) {
-
-		// Create the noise module
-		LibNoise.Unity.ModuleBase module;
-
-		switch(type) {
-			case NoiseType.Perlin:
-				module = new Perlin (frequency, lacunarity, persistence, octaves, seed, QualityMode.High);
-				break;
-			case NoiseType.RiggedMultifractal:
-				module = new RiggedMultifractal (frequency, lacunarity, octaves, seed, QualityMode.High);
-				break;
-			case NoiseType.Billow:
-				module = new Billow (frequency, lacunarity, persistence, octaves, seed, QualityMode.High);
-				break;
-			default:
-				module = new Perlin (frequency, lacunarity, persistence, octaves, seed, QualityMode.High);
-				break;
-		}
+	public float[,] GenerateNoise(int width, int height, ModuleBase module) {
 
 		// Create noiseMap and fill it with samples from noise module
 		float[,] noiseMap = new float[width, height];
@@ -47,7 +28,7 @@ public class NoiseGenerator {
 
 	}
 
-	// Gets min and max value of samples and number of samples out of range
+	// Gets min and max value of samples and number of samples out of range [-1, 1]
 	void NoiseMapTest(float[,] noiseMap) {
 		float biggest = -99999f;
 		float smallest = 99999f;

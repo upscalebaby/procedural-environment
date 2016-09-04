@@ -3,21 +3,14 @@ using System.Collections;
 using UnityEngine.UI;
 
 public class DropdownMenu : MonoBehaviour {
-	GameObject perlinUI;
-	GameObject ridgedUI;
-	GameObject billowUI;
-	Dropdown menu;
-
-	TerrainGenerator terrainGenerator;
+	public GameObject perlinUI;
+	public GameObject ridgedUI;
+	public GameObject billowUI;
+	public Dropdown menu;
+	public TerrainGenerator terrainGenerator;
 
 	// Use this for initialization
 	void Start () {
-		perlinUI = GameObject.FindGameObjectWithTag ("perlin");
-		ridgedUI = GameObject.FindGameObjectWithTag ("ridged");
-		billowUI = GameObject.FindGameObjectWithTag ("billow");
-		menu = GameObject.FindObjectOfType<UnityEngine.UI.Dropdown> ();
-		terrainGenerator = GameObject.FindObjectOfType<TerrainGenerator> ();
-
 		ChangeNoiseModule ();
 	}
 	
@@ -39,12 +32,12 @@ public class DropdownMenu : MonoBehaviour {
 				terrainGenerator.SetNoiseType (NoiseType.RiggedMultifractal);
 				break;
 			case 2:
-				ActivatebillowUI ();
+				ActivateBillowUI ();
 				terrainGenerator.SetNoiseType (NoiseType.Billow);
 				break;
 			}
 
-		terrainGenerator.GenerateTerrain ();
+		//terrainGenerator.GenerateTerrain ();
 	}
 
 	void ActivatePerlinUI() {
@@ -60,7 +53,7 @@ public class DropdownMenu : MonoBehaviour {
 		billowUI.SetActive (false);
 	}
 
-	void ActivatebillowUI() {
+	void ActivateBillowUI() {
 		perlinUI.SetActive (false);
 		ridgedUI.SetActive (false);
 		billowUI.SetActive (true);
