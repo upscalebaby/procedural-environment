@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-//using Microsoft.Xna.Framework;
+using System.Xml.Serialization;
 using UnityEngine;
+using Debug = System.Diagnostics.Debug;
 
-namespace LibNoise.Unity
+namespace LibNoise
 {
+
     #region Enumerations
 
     /// <summary>
@@ -29,7 +27,7 @@ namespace LibNoise.Unity
     {
         #region Fields
 
-        protected ModuleBase[] m_modules = null;
+        private ModuleBase[] _modules;
 
         #endregion
 
@@ -43,7 +41,7 @@ namespace LibNoise.Unity
         {
             if (count > 0)
             {
-                this.m_modules = new ModuleBase[count];
+                _modules = new ModuleBase[count];
             }
         }
 
@@ -60,43 +58,47 @@ namespace LibNoise.Unity
         {
             get
             {
-                System.Diagnostics.Debug.Assert(this.m_modules != null);
-                System.Diagnostics.Debug.Assert(this.m_modules.Length > 0);
-                if (index < 0 || index >= this.m_modules.Length)
+                Debug.Assert(_modules != null);
+                Debug.Assert(_modules.Length > 0);
+                if (index < 0 || index >= _modules.Length)
                 {
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException("Index out of valid module range");
                 }
-                if (this.m_modules[index] == null)
+                if (_modules[index] == null)
                 {
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("Desired element is null");
                 }
-                return this.m_modules[index];
+                return _modules[index];
             }
             set
             {
-                System.Diagnostics.Debug.Assert(this.m_modules.Length > 0);
-                if (index < 0 || index >= this.m_modules.Length)
+                Debug.Assert(_modules.Length > 0);
+                if (index < 0 || index >= _modules.Length)
                 {
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException("Index out of valid module range");
                 }
                 if (value == null)
                 {
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("Value should not be null");
                 }
-                this.m_modules[index] = value;
+                _modules[index] = value;
             }
         }
 
         #endregion
 
         #region Properties
+        protected ModuleBase[] Modules
+        {
+            get { return _modules; }
+        }
 
         /// <summary>
         /// Gets the number of source modules required by this noise module.
         /// </summary>
         public int SourceModuleCount
         {
-            get { return (this.m_modules == null) ? 0 : this.m_modules.Length; }
+            get { return (_modules == null) ? 0 : _modules.Length; }
         }
 
         #endregion
@@ -119,7 +121,7 @@ namespace LibNoise.Unity
         /// <returns>The resulting output value.</returns>
         public double GetValue(Vector3 coordinate)
         {
-            return this.GetValue((double)coordinate.x, (double)coordinate.y, (double)coordinate.z);
+            return GetValue(coordinate.x, coordinate.y, coordinate.z);
         }
 
         /// <summary>
@@ -129,25 +131,25 @@ namespace LibNoise.Unity
         /// <returns>The resulting output value.</returns>
         public double GetValue(ref Vector3 coordinate)
         {
-            return this.GetValue((double)coordinate.x, (double)coordinate.y, (double)coordinate.z);
+            return GetValue(coordinate.x, coordinate.y, coordinate.z);
         }
 
         #endregion
 
         #region IDisposable Members
 
-        [System.Xml.Serialization.XmlIgnore]
+        [XmlIgnore]
 #if !XBOX360 && !ZUNE
         [NonSerialized]
 #endif
-        private bool m_disposed = false;
+        private bool _disposed;
 
         /// <summary>
         /// Gets a value whether the object is disposed.
         /// </summary>
         public bool IsDisposed
         {
-            get { return this.m_disposed; }
+            get { return _disposed; }
         }
 
         /// <summary>
@@ -155,7 +157,10 @@ namespace LibNoise.Unity
         /// </summary>
         public void Dispose()
         {
-            if (!this.m_disposed) { this.m_disposed = this.Disposing(); }
+            if (!_disposed)
+            {
+                _disposed = Disposing();
+            }
             GC.SuppressFinalize(this);
         }
 
@@ -165,14 +170,14 @@ namespace LibNoise.Unity
         /// <returns>True if the object is completely disposed.</returns>
         protected virtual bool Disposing()
         {
-            if (this.m_modules != null)
+            if (_modules != null)
             {
-                for (int i = 0; i < this.m_modules.Length; i++)
+                for (var i = 0; i < _modules.Length; i++)
                 {
-                    this.m_modules[i].Dispose();
-                    this.m_modules[i] = null;
+                    _modules[i].Dispose();
+                    _modules[i] = null;
                 }
-                this.m_modules = null;
+                _modules = null;
             }
             return true;
         }

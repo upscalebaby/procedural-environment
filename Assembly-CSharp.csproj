@@ -45,16 +45,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\Demo.cs" />
      <Compile Include="Assets\Resources\LibNoise.Unity\Generator\Billow.cs" />
      <Compile Include="Assets\Resources\LibNoise.Unity\Generator\Checker.cs" />
      <Compile Include="Assets\Resources\LibNoise.Unity\Generator\Const.cs" />
      <Compile Include="Assets\Resources\LibNoise.Unity\Generator\Cylinders.cs" />
      <Compile Include="Assets\Resources\LibNoise.Unity\Generator\Perlin.cs" />
-     <Compile Include="Assets\Resources\LibNoise.Unity\Generator\RiggedMultifractal.cs" />
+     <Compile Include="Assets\Resources\LibNoise.Unity\Generator\RidgedMultifractal.cs" />
      <Compile Include="Assets\Resources\LibNoise.Unity\Generator\Spheres.cs" />
      <Compile Include="Assets\Resources\LibNoise.Unity\Generator\Voronoi.cs" />
-     <Compile Include="Assets\Resources\LibNoise.Unity\Gradient.cs" />
+     <Compile Include="Assets\Resources\LibNoise.Unity\GradientPresets.cs" />
      <Compile Include="Assets\Resources\LibNoise.Unity\ModuleBase.cs" />
      <Compile Include="Assets\Resources\LibNoise.Unity\Noise2D.cs" />
      <Compile Include="Assets\Resources\LibNoise.Unity\Operator\Abs.cs" />

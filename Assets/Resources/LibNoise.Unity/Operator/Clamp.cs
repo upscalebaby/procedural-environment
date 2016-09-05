@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Diagnostics;
 
-namespace LibNoise.Unity.Operator
+namespace LibNoise.Operator
 {
     /// <summary>
     /// Provides a noise module that clamps the output value from a source module to a
@@ -13,8 +10,8 @@ namespace LibNoise.Unity.Operator
     {
         #region Fields
 
-        private double m_min = -1.0;
-        private double m_max = 1.0;
+        private double _min = -1.0;
+        private double _max = 1.0;
 
         #endregion
 
@@ -32,14 +29,24 @@ namespace LibNoise.Unity.Operator
         /// Initializes a new instance of Clamp.
         /// </summary>
         /// <param name="input">The input module.</param>
+        public Clamp(ModuleBase input)
+            : base(1)
+        {
+            Modules[0] = input;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of Clamp.
+        /// </summary>
+        /// <param name="input">The input module.</param>
         /// <param name="min">The minimum value.</param>
         /// <param name="max">The maximum value.</param>
         public Clamp(double min, double max, ModuleBase input)
             : base(1)
         {
-            this.Minimum = min;
-            this.Maximum = max;
-            this.m_modules[0] = input;
+            Minimum = min;
+            Maximum = max;
+            Modules[0] = input;
         }
 
         #endregion
@@ -51,8 +58,8 @@ namespace LibNoise.Unity.Operator
         /// </summary>
         public double Maximum
         {
-            get { return this.m_max; }
-            set { this.m_max = value; }
+            get { return _max; }
+            set { _max = value; }
         }
 
         /// <summary>
@@ -60,8 +67,24 @@ namespace LibNoise.Unity.Operator
         /// </summary>
         public double Minimum
         {
-            get { return this.m_min; }
-            set { this.m_min = value; }
+            get { return _min; }
+            set { _min = value; }
+        }
+
+        #endregion
+
+        #region Methods
+
+        /// <summary>
+        /// Sets the bounds.
+        /// </summary>
+        /// <param name="min">The minimum value.</param>
+        /// <param name="max">The maximum value.</param>
+        public void SetBounds(double min, double max)
+        {
+            Debug.Assert(min < max);
+            _min = min;
+            _max = max;
         }
 
         #endregion
@@ -77,16 +100,22 @@ namespace LibNoise.Unity.Operator
         /// <returns>The resulting output value.</returns>
         public override double GetValue(double x, double y, double z)
         {
-            System.Diagnostics.Debug.Assert(this.m_modules[0] != null);
-            if (this.m_min > this.m_max)
+            Debug.Assert(Modules[0] != null);
+            if (_min > _max)
             {
-                double t = this.m_min;
-                this.m_min = this.m_max;
-                this.m_max = t;
+                var t = _min;
+                _min = _max;
+                _max = t;
             }
-            double v = this.m_modules[0].GetValue(x, y, z);
-            if (v < this.m_min) { return this.m_min; }
-            else if (v > this.m_max) { return this.m_max; }
+            var v = Modules[0].GetValue(x, y, z);
+            if (v < _min)
+            {
+                return _min;
+            }
+            if (v > _max)
+            {
+                return _max;
+            }
             return v;
         }
 

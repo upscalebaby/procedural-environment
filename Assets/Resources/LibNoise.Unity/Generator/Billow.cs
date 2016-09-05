@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-//using Microsoft.Xna.Framework;
 using UnityEngine;
 
-namespace LibNoise.Unity.Generator
+namespace LibNoise.Generator
 {
     /// <summary>
     /// Provides a noise module that outputs a three-dimensional billowy noise. [GENERATOR]
@@ -15,12 +10,12 @@ namespace LibNoise.Unity.Generator
     {
         #region Fields
 
-        private double m_frequency = 1.0;
-        private double m_lacunarity = 2.0;
-        private QualityMode m_quality = QualityMode.Medium;
-        private int m_octaveCount = 6;
-        private double m_persistence = 0.5;
-        private int m_seed = 0;
+        private double _frequency = 1.0;
+        private double _lacunarity = 2.0;
+        private QualityMode _quality = QualityMode.Medium;
+        private int _octaveCount = 6;
+        private double _persistence = 0.5;
+        private int _seed;
 
         #endregion
 
@@ -43,15 +38,16 @@ namespace LibNoise.Unity.Generator
         /// <param name="octaves">The number of octaves of the billowy noise.</param>
         /// <param name="seed">The seed of the billowy noise.</param>
         /// <param name="quality">The quality of the billowy noise.</param>
-        public Billow(double frequency, double lacunarity, double persistence, int octaves, int seed, QualityMode quality)
+        public Billow(double frequency, double lacunarity, double persistence, int octaves, int seed,
+            QualityMode quality)
             : base(0)
         {
-            this.Frequency = frequency;
-            this.Lacunarity = lacunarity;
-            this.OctaveCount = octaves;
-            this.Persistence = persistence;
-            this.Seed = seed;
-            this.Quality = quality;
+            Frequency = frequency;
+            Lacunarity = lacunarity;
+            OctaveCount = octaves;
+            Persistence = persistence;
+            Seed = seed;
+            Quality = quality;
         }
 
         #endregion
@@ -63,8 +59,8 @@ namespace LibNoise.Unity.Generator
         /// </summary>
         public double Frequency
         {
-            get { return this.m_frequency; }
-            set { this.m_frequency = value; }
+            get { return _frequency; }
+            set { _frequency = value; }
         }
 
         /// <summary>
@@ -72,8 +68,8 @@ namespace LibNoise.Unity.Generator
         /// </summary>
         public double Lacunarity
         {
-            get { return this.m_lacunarity; }
-            set { this.m_lacunarity = value; }
+            get { return _lacunarity; }
+            set { _lacunarity = value; }
         }
 
         /// <summary>
@@ -81,8 +77,8 @@ namespace LibNoise.Unity.Generator
         /// </summary>
         public QualityMode Quality
         {
-            get { return this.m_quality; }
-            set { this.m_quality = value; }
+            get { return _quality; }
+            set { _quality = value; }
         }
 
         /// <summary>
@@ -90,8 +86,8 @@ namespace LibNoise.Unity.Generator
         /// </summary>
         public int OctaveCount
         {
-            get { return this.m_octaveCount; }
-            set { this.m_octaveCount = (int)Mathf.Clamp(value, 1, Utils.OctavesMaximum); }
+            get { return _octaveCount; }
+            set { _octaveCount = Mathf.Clamp(value, 1, Utils.OctavesMaximum); }
         }
 
         /// <summary>
@@ -99,8 +95,8 @@ namespace LibNoise.Unity.Generator
         /// </summary>
         public double Persistence
         {
-            get { return this.m_persistence; }
-            set { this.m_persistence = value; }
+            get { return _persistence; }
+            set { _persistence = value; }
         }
 
         /// <summary>
@@ -108,8 +104,8 @@ namespace LibNoise.Unity.Generator
         /// </summary>
         public int Seed
         {
-            get { return this.m_seed; }
-            set { this.m_seed = value; }
+            get { return _seed; }
+            set { _seed = value; }
         }
 
         #endregion
@@ -125,27 +121,24 @@ namespace LibNoise.Unity.Generator
         /// <returns>The resulting output value.</returns>
         public override double GetValue(double x, double y, double z)
         {
-            double value = 0.0;
-            double signal = 0.0;
-            double curp = 1.0;
-            double nx, ny, nz;
-            long seed;
-            x *= this.m_frequency;
-            y *= this.m_frequency;
-            z *= this.m_frequency;
-            for (int i = 0; i < this.m_octaveCount; i++)
+            var value = 0.0;
+            var curp = 1.0;
+            x *= _frequency;
+            y *= _frequency;
+            z *= _frequency;
+            for (var i = 0; i < _octaveCount; i++)
             {
-                nx = Utils.MakeInt32Range(x);
-                ny = Utils.MakeInt32Range(y);
-                nz = Utils.MakeInt32Range(z);
-                seed = (this.m_seed + i) & 0xffffffff;
-                signal = Utils.GradientCoherentNoise3D(nx, ny, nz, seed, this.m_quality);
+                var nx = Utils.MakeInt32Range(x);
+                var ny = Utils.MakeInt32Range(y);
+                var nz = Utils.MakeInt32Range(z);
+                var seed = (_seed + i) & 0xffffffff;
+                var signal = Utils.GradientCoherentNoise3D(nx, ny, nz, seed, _quality);
                 signal = 2.0 * Math.Abs(signal) - 1.0;
                 value += signal * curp;
-                x *= this.m_lacunarity;
-                y *= this.m_lacunarity;
-                z *= this.m_lacunarity;
-                curp *= this.m_persistence;
+                x *= _lacunarity;
+                y *= _lacunarity;
+                z *= _lacunarity;
+                curp *= _persistence;
             }
             return value + 0.5;
         }

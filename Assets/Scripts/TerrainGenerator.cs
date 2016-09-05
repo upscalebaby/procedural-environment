@@ -1,10 +1,15 @@
 ﻿using UnityEngine;
 using System.Collections;
-using LibNoise.Unity;
-using LibNoise.Unity.Operator;
-using LibNoise.Unity.Generator;
+using LibNoise.Operator;
+using LibNoise.Generator;
+using LibNoise;
 
 public class TerrainGenerator : MonoBehaviour {
+
+    public enum NoiseType{
+        Perlin, Billow, RidgedMultifractal
+    };
+
 	public int width;
 	public int height;
 	public UnityEngine.Gradient gradient;
@@ -13,35 +18,49 @@ public class TerrainGenerator : MonoBehaviour {
 	private NoiseType noiseType;
 
 	private ModuleBase currentModule;
-	private Perlin perlinModule;
-	private RiggedMultifractal ridgedModule;
-	private Billow billowModule;
 
-	private ScaleBias scaleBiasModule;
+    private Perlin perlinModule;
+    private ScaleBias perlinScaleBiasModule;
+
+    private RidgedMultifractal ridgedModule;
+    private ScaleBias ridgedScaleBiasModule;
+
+	private Billow billowModule;
+	private ScaleBias billowScaleBiasModule;
+
 	private Select selectModule;
+    private bool combinedNoise;
 
 	private GameObject terrainMesh;
 
 	// Init values for modules
-	private float frequency = 0.1f;
+	private float frequency = 0.06f;
 	private float lacunarity = 2f;
 	private float persistence = 0.5f;
 	private int octaves = 4;
 	private int seed = 0;
 
-	private float scale = 0.125f;
-	private float bias = -0.75f;
+	private float scale = 0.15f;
+	private float bias = -0.22f;
+
+    void Awake () {
+        noiseGenerator = new NoiseGenerator();
+        perlinModule = new Perlin(frequency, lacunarity, persistence, octaves, seed, QualityMode.High);
+        perlinScaleBiasModule = new ScaleBias(scale, bias, perlinModule);
+
+        ridgedModule = new RidgedMultifractal(frequency, lacunarity, octaves, seed, QualityMode.High);
+        ridgedScaleBiasModule = new ScaleBias(scale, bias, ridgedModule);
+
+        billowModule = new Billow(frequency, lacunarity, persistence, octaves, seed, QualityMode.High);
+        billowScaleBiasModule = new ScaleBias(scale, bias, billowModule);
+
+        selectModule = new Select(billowScaleBiasModule, ridgedScaleBiasModule, perlinScaleBiasModule);
+        selectModule.SetBounds(0.7f, 1000);
+        selectModule.FallOff = 0.125;
+    }
 
 	// Use this for initialization
 	void Start () {
-		noiseGenerator = new NoiseGenerator();
-		perlinModule = new Perlin(frequency, lacunarity, persistence, octaves, seed, QualityMode.High);
-		ridgedModule = new RiggedMultifractal(frequency, lacunarity, octaves, seed, QualityMode.High);
-		billowModule = new Billow(frequency, lacunarity, persistence, octaves, seed, QualityMode.High);
-
-		scaleBiasModule = new ScaleBias(scale, bias, billowModule);
-		//selectModule = new Select(billowModule, ridgedModule, perlinModule);
-
 		GenerateTerrain ();
 	}
 	
@@ -53,28 +72,34 @@ public class TerrainGenerator : MonoBehaviour {
 	public void GenerateTerrain() {
 		ModuleBase noiseModule;
 
-		switch(noiseType) {
-			case NoiseType.Perlin:
-				noiseModule = perlinModule;
-				break;
-			case NoiseType.RiggedMultifractal:
-				noiseModule = ridgedModule;
-				break;
-			case NoiseType.Billow:
-				noiseModule = scaleBiasModule;
-				break;
-			default:
-				noiseModule = perlinModule;
-				break;
-		}
+        // Select the right noise module
+        if(combinedNoise) {
+            noiseModule = selectModule;
+        }
+        else {
+            switch(noiseType) {
+                case NoiseType.Perlin:
+                    noiseModule = perlinScaleBiasModule;
+                    break;
+                case NoiseType.RidgedMultifractal:
+                    noiseModule = ridgedScaleBiasModule;
+                    break;
+                case NoiseType.Billow:
+                    noiseModule = billowScaleBiasModule;
+                    break;
+                default:
+                    noiseModule = perlinScaleBiasModule;
+                    break;
+            }
+        }
 
 		// Generate noiseMap
 		float[,] noiseMap = noiseGenerator.GenerateNoise (width, height, noiseModule);
 
-		// Generate texture from noiseMap
+		// Generate texture
 		Texture2D texture = GenerateTexture (noiseMap);
 
-		// Generate mesh if there is none
+		// Generate mesh
 		if(terrainMesh == null) {
 			terrainMesh = GameObject.CreatePrimitive (PrimitiveType.Plane);
 		}
@@ -107,13 +132,17 @@ public class TerrainGenerator : MonoBehaviour {
 
 	}
 
-	// TODO: Make a reference based on a switch, then simply set this refernce? No we tried thath right?
+    public void ToggleCombinedNoise() {
+        this.combinedNoise = !this.combinedNoise;
+        GenerateTerrain ();
+    }
+        
 	public void SetFrequency(float input) {
 		switch(noiseType) {
 			case NoiseType.Billow:
 				billowModule.Frequency = input;
 				break;
-			case NoiseType.RiggedMultifractal:
+			case NoiseType.RidgedMultifractal:
 				ridgedModule.Frequency = input;
 				break;
 			case NoiseType.Perlin:
@@ -127,7 +156,7 @@ public class TerrainGenerator : MonoBehaviour {
 			case NoiseType.Billow:
 				billowModule.Lacunarity = input;
 				break;
-			case NoiseType.RiggedMultifractal:
+			case NoiseType.RidgedMultifractal:
 				ridgedModule.Lacunarity = input;
 				break;
 			case NoiseType.Perlin:
@@ -154,7 +183,7 @@ public class TerrainGenerator : MonoBehaviour {
 			case NoiseType.Billow:
 				billowModule.OctaveCount = input;
 				break;
-			case NoiseType.RiggedMultifractal:
+			case NoiseType.RidgedMultifractal:
 				ridgedModule.OctaveCount = input;
 				break;
 			case NoiseType.Perlin:
@@ -170,7 +199,7 @@ public class TerrainGenerator : MonoBehaviour {
 			case NoiseType.Billow:
 				billowModule.Seed = input;
 				break;
-			case NoiseType.RiggedMultifractal:
+			case NoiseType.RidgedMultifractal:
 				ridgedModule.Seed = input;
 				break;
 			case NoiseType.Perlin:
@@ -180,11 +209,31 @@ public class TerrainGenerator : MonoBehaviour {
 	}
 
 	public void SetScale(float input) {
-		scaleBiasModule.Scale = input;
+        switch(noiseType) {
+            case NoiseType.Billow:
+                billowScaleBiasModule.Scale = input;
+                break;
+            case NoiseType.RidgedMultifractal:
+                ridgedScaleBiasModule.Scale = input;
+                break;
+            case NoiseType.Perlin:
+                perlinScaleBiasModule.Scale = input;
+                break;
+        }
 	}
 
 	public void SetBias(float input) {
-		scaleBiasModule.Bias = input;
+        switch(noiseType) {
+            case NoiseType.Billow:
+                billowScaleBiasModule.Bias = input;
+                break;
+            case NoiseType.RidgedMultifractal:
+                ridgedScaleBiasModule.Bias = input;
+                break;
+            case NoiseType.Perlin:
+                perlinScaleBiasModule.Bias = input;
+                break;
+        }
 	}
 		
 }

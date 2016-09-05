@@ -1,10 +1,10 @@
 ﻿<Properties StartupItem="Assembly-CSharp.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Unity.Instance.Unity Editor" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\DropdownMenu.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\TerrainGenerator.cs">
     <Files>
-      <File FileName="Assets\Scripts\NoiseGenerator.cs" Line="36" Column="1" />
-      <File FileName="Assets\Scripts\TerrainGenerator.cs" Line="13" Column="15" />
-      <File FileName="Assets\Scripts\DropdownMenu.cs" Line="23" Column="30" />
+      <File FileName="Assets\Scripts\TerrainGenerator.cs" Line="57" Column="96" />
+      <File FileName="Assets\Scripts\NoiseGenerator.cs" Line="14" Column="34" />
+      <File FileName="Assets\Scripts\DropdownMenu.cs" Line="41" Column="3" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

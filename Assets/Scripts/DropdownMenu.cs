@@ -25,19 +25,19 @@ public class DropdownMenu : MonoBehaviour {
 		switch(i) {
 			case 0:
 				ActivatePerlinUI ();
-				terrainGenerator.SetNoiseType (NoiseType.Perlin);
+				terrainGenerator.SetNoiseType (TerrainGenerator.NoiseType.Perlin);
 				break;
-			case 1:
-				ActivateRidgeUI ();
-				terrainGenerator.SetNoiseType (NoiseType.RiggedMultifractal);
+            case 1:
+                ActivateRidgeUI ();
+                terrainGenerator.SetNoiseType(TerrainGenerator.NoiseType.RidgedMultifractal);
 				break;
 			case 2:
 				ActivateBillowUI ();
-				terrainGenerator.SetNoiseType (NoiseType.Billow);
+                terrainGenerator.SetNoiseType (TerrainGenerator.NoiseType.Billow);
 				break;
 			}
 
-		//terrainGenerator.GenerateTerrain ();
+		terrainGenerator.GenerateTerrain ();
 	}
 
 	void ActivatePerlinUI() {
