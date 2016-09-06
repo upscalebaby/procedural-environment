@@ -13,6 +13,7 @@ public class TerrainGenerator : MonoBehaviour {
 	public int width;
 	public int height;
 	public UnityEngine.Gradient gradient;
+    public AnimationCurve curve;
 
 	private NoiseGenerator noiseGenerator;
 	private NoiseType noiseType;
@@ -43,6 +44,8 @@ public class TerrainGenerator : MonoBehaviour {
 	private float scale = 0.15f;
 	private float bias = -0.22f;
 
+    private float fallOff = 0.1f;
+
     void Awake () {
         noiseGenerator = new NoiseGenerator();
         perlinModule = new Perlin(frequency, lacunarity, persistence, octaves, seed, QualityMode.High);
@@ -55,7 +58,7 @@ public class TerrainGenerator : MonoBehaviour {
         billowScaleBiasModule = new ScaleBias(scale, bias, billowModule);
 
         selectModule = new Select(billowScaleBiasModule, ridgedScaleBiasModule, perlinScaleBiasModule);
-        selectModule.SetBounds(0.7f, 1000);
+        selectModule.SetBounds(0.5, 1000);
         selectModule.FallOff = 0.125;
     }
 
@@ -93,8 +96,9 @@ public class TerrainGenerator : MonoBehaviour {
             }
         }
 
-		// Generate noiseMap
+		// Generate noiseMap and Falloff map
 		float[,] noiseMap = noiseGenerator.GenerateNoise (width, height, noiseModule);
+        noiseMap = GenerateFallOffMap(noiseMap);
 
 		// Generate texture
 		Texture2D texture = GenerateTexture (noiseMap);
@@ -125,6 +129,25 @@ public class TerrainGenerator : MonoBehaviour {
 		texture.Apply ();
 		return texture;
 	}
+
+    // Generate Falloff map
+    private float[,] GenerateFallOffMap(float[,] heightMap) {
+        Vector2 centerOfSphere = new Vector2(width/2, height/2);
+
+        for (int y = 0; y < height - 1; y++) {
+            for(int x = 0; x < width - 1; x++) {
+                float distanceToCenter = (new Vector2(x, y) - centerOfSphere).magnitude;
+                distanceToCenter = Mathf.Clamp(distanceToCenter, 1, width);
+
+                float modifier = curve.Evaluate(1 / (distanceToCenter * fallOff));
+                modifier = Mathf.Clamp(modifier, 0, 1);
+                heightMap[x, y] = heightMap[x, y] * modifier;
+            }
+        }
+
+        return heightMap;
+
+    }
 
 	// Setters for UI elements
 	public void SetNoiseType(NoiseType type) {
@@ -235,5 +258,9 @@ public class TerrainGenerator : MonoBehaviour {
                 break;
         }
 	}
+
+    public void SetFallOff(float input) {
+        this.fallOff = input;
+    }
 		
 }
