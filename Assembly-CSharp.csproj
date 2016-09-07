@@ -80,7 +80,9 @@
      <Compile Include="Assets\Resources\LibNoise.Unity\Properties\AssemblyInfo.cs" />
      <Compile Include="Assets\Resources\LibNoise.Unity\Utils.cs" />
      <Compile Include="Assets\Scripts\DropdownMenu.cs" />
+     <Compile Include="Assets\Scripts\NewBehaviourScript.cs" />
      <Compile Include="Assets\Scripts\NoiseGenerator.cs" />
+     <Compile Include="Assets\Scripts\NoiseWrapper.cs" />
      <Compile Include="Assets\Scripts\TerrainGenerator.cs" />
      <None Include="Assets\Resources\LibNoise.Unity\COPYING.txt" />
      <None Include="Assets\Resources\LibNoise.Unity\COPYING.LESSER.txt" />

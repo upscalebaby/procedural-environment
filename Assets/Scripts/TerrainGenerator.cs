@@ -7,7 +7,7 @@ using LibNoise;
 public class TerrainGenerator : MonoBehaviour {
 
     public enum NoiseType{
-        Perlin, Billow, RidgedMultifractal
+        Perlin, Billow, RidgedMultifractal, Combined
     };
 
 	public int width;
@@ -19,18 +19,17 @@ public class TerrainGenerator : MonoBehaviour {
 	private NoiseType noiseType;
 
 	private ModuleBase currentModule;
-
     private Perlin perlinModule;
     private ScaleBias perlinScaleBiasModule;
-
     private RidgedMultifractal ridgedModule;
     private ScaleBias ridgedScaleBiasModule;
-
 	private Billow billowModule;
-	private ScaleBias billowScaleBiasModule;
-
+    private ScaleBias billowScaleBiasModule;
 	private Select selectModule;
-    private bool combinedNoise;
+    private Turbulence turbulenceModule;
+    private ScaleBias turbulenceScaleBias;
+
+    private bool combineNoise;
 
 	private GameObject terrainMesh;
 
@@ -44,10 +43,11 @@ public class TerrainGenerator : MonoBehaviour {
 	private float scale = 0.15f;
 	private float bias = -0.22f;
 
-    private float fallOff = 0.1f;
+    private float fallOff = 0.04f;
 
     void Awake () {
         noiseGenerator = new NoiseGenerator();
+
         perlinModule = new Perlin(frequency, lacunarity, persistence, octaves, seed, QualityMode.High);
         perlinScaleBiasModule = new ScaleBias(scale, bias, perlinModule);
 
@@ -59,7 +59,10 @@ public class TerrainGenerator : MonoBehaviour {
 
         selectModule = new Select(billowScaleBiasModule, ridgedScaleBiasModule, perlinScaleBiasModule);
         selectModule.SetBounds(0.5, 1000);
-        selectModule.FallOff = 0.125;
+        selectModule.FallOff = 0.125;   // Might need parameterizing
+
+        turbulenceModule = new Turbulence(selectModule);
+        turbulenceScaleBias = new ScaleBias(scale, bias, turbulenceModule);
     }
 
 	// Use this for initialization
@@ -76,8 +79,8 @@ public class TerrainGenerator : MonoBehaviour {
 		ModuleBase noiseModule;
 
         // Select the right noise module
-        if(combinedNoise) {
-            noiseModule = selectModule;
+        if(combineNoise) {
+            noiseModule = turbulenceScaleBias;
         }
         else {
             switch(noiseType) {
@@ -156,10 +159,10 @@ public class TerrainGenerator : MonoBehaviour {
 	}
 
     public void ToggleCombinedNoise() {
-        this.combinedNoise = !this.combinedNoise;
+        this.combineNoise = !this.combineNoise;
         GenerateTerrain ();
     }
-        
+
 	public void SetFrequency(float input) {
 		switch(noiseType) {
 			case NoiseType.Billow:
@@ -171,6 +174,9 @@ public class TerrainGenerator : MonoBehaviour {
 			case NoiseType.Perlin:
 				perlinModule.Frequency = input;
 				break;
+            case NoiseType.Combined:
+                turbulenceModule.Frequency = input;
+                break;
 		}
 	}
 
@@ -228,6 +234,9 @@ public class TerrainGenerator : MonoBehaviour {
 			case NoiseType.Perlin:
 				perlinModule.Seed = input;
 				break;
+            case NoiseType.Combined:
+                turbulenceModule.Seed = input;
+                break;
 		}
 	}
 
@@ -241,6 +250,9 @@ public class TerrainGenerator : MonoBehaviour {
                 break;
             case NoiseType.Perlin:
                 perlinScaleBiasModule.Scale = input;
+                break;
+            case NoiseType.Combined:
+                turbulenceScaleBias.Scale = input;
                 break;
         }
 	}
@@ -256,11 +268,28 @@ public class TerrainGenerator : MonoBehaviour {
             case NoiseType.Perlin:
                 perlinScaleBiasModule.Bias = input;
                 break;
+            case NoiseType.Combined:
+                turbulenceScaleBias.Bias = input;
+                break;
+
         }
 	}
 
+    public void SetPower(float input) {
+        turbulenceModule.Power = input;
+    }
+
+    public void SetRoughness(float i) {
+        int input = (int) i;
+        turbulenceModule.Roughness = input;
+    }
+        
     public void SetFallOff(float input) {
         this.fallOff = input;
+    }
+
+    public void SetCombinatorFalloff(float input) {
+        selectModule.FallOff = input;
     }
 		
 }
