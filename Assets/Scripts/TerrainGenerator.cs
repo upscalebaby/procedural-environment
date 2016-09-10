@@ -16,7 +16,10 @@ public class TerrainGenerator : MonoBehaviour {
     public AnimationCurve curve;
 
 	private NoiseGenerator noiseGenerator;
+    private GameObject terrainMesh;
+
 	private NoiseType noiseType;
+    private bool combineNoise;
 
 	private ModuleBase currentModule;
     private Perlin perlinModule;
@@ -29,11 +32,8 @@ public class TerrainGenerator : MonoBehaviour {
     private Turbulence turbulenceModule;
     private ScaleBias turbulenceScaleBias;
 
-    private bool combineNoise;
-
-	private GameObject terrainMesh;
-
-	// Init values for modules
+	// Init values
+    private float fallOff = 0.04f;
 	private float frequency = 0.06f;
 	private float lacunarity = 2f;
 	private float persistence = 0.5f;
@@ -43,7 +43,7 @@ public class TerrainGenerator : MonoBehaviour {
 	private float scale = 0.15f;
 	private float bias = -0.22f;
 
-    private float fallOff = 0.04f;
+    private Vector3 offset;
 
     void Awake () {
         noiseGenerator = new NoiseGenerator();
@@ -59,7 +59,7 @@ public class TerrainGenerator : MonoBehaviour {
 
         selectModule = new Select(billowScaleBiasModule, ridgedScaleBiasModule, perlinScaleBiasModule);
         selectModule.SetBounds(0.5, 1000);
-        selectModule.FallOff = 0.125;   // Might need parameterizing
+        selectModule.FallOff = 0.125;
 
         turbulenceModule = new Turbulence(selectModule);
         turbulenceScaleBias = new ScaleBias(scale, bias, turbulenceModule);
@@ -80,7 +80,8 @@ public class TerrainGenerator : MonoBehaviour {
 
         // Select the right noise module
         if(combineNoise) {
-            noiseModule = turbulenceScaleBias;
+            //noiseModule = turbulenceScaleBias;
+            noiseModule = selectModule;
         }
         else {
             switch(noiseType) {
@@ -100,7 +101,7 @@ public class TerrainGenerator : MonoBehaviour {
         }
 
 		// Generate noiseMap and Falloff map
-		float[,] noiseMap = noiseGenerator.GenerateNoise (width, height, noiseModule);
+        float[,] noiseMap = noiseGenerator.GenerateNoise (width, height, offset, noiseModule);
         noiseMap = GenerateFallOffMap(noiseMap);
 
 		// Generate texture
@@ -275,6 +276,18 @@ public class TerrainGenerator : MonoBehaviour {
         }
 	}
 
+    public void SetX(float input) {
+        offset.x = input;
+    }
+
+    public void SetY(float input) {
+        offset.y = input;
+    }
+
+    public void SetZ(float input) {
+        offset.z = input;
+    }
+
     public void SetPower(float input) {
         turbulenceModule.Power = input;
     }
@@ -288,7 +301,7 @@ public class TerrainGenerator : MonoBehaviour {
         this.fallOff = input;
     }
 
-    public void SetCombinatorFalloff(float input) {
+    public void SetCrossover(float input) {
         selectModule.FallOff = input;
     }
 		

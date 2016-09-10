@@ -5,18 +5,17 @@ using LibNoise.Generator;
 
 public class NoiseGenerator {
 
-	public float[,] GenerateNoise(int width, int height, ModuleBase module) {
-
-		// Create noiseMap and fill it with samples from noise module
+    public float[,] GenerateNoise(int width, int height, Vector3 offset, ModuleBase module) {
 		float[,] noiseMap = new float[width, height];
 
 		for (int y = 0; y < height - 1; y++) {
 			for(int x = 0; x < width - 1; x++) {
 				// Center frequency scaling, sample noise module and clamp output
-				float sampleX = x - width / 2;
-				float sampleY = y - height / 2;
+                float sampleX = (x + offset.x) - width / 2;
+                float sampleY = (y + offset.y) - height / 2;
+                float sampleZ = offset.z;
 
-				noiseMap[x, y] = (float )module.GetValue (sampleX, sampleY, 0);
+				noiseMap[x, y] = (float )module.GetValue (sampleX, sampleY, sampleZ);
 				Mathf.Clamp(noiseMap[x, y], -1f, 1f);
 
 				// Convert range from [-1, 1] to [0, 1] for now
