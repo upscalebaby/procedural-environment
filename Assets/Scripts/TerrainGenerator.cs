@@ -14,7 +14,6 @@ public class TerrainGenerator : MonoBehaviour {
 	public int height;
 	public UnityEngine.Gradient gradient;
     public AnimationCurve curve;
-    public AnimationCurve heightCurve;
 
 	private NoiseGenerator noiseGenerator;
     private GameObject terrain;
@@ -33,36 +32,35 @@ public class TerrainGenerator : MonoBehaviour {
     private Turbulence turbulenceModule;
     private ScaleBias turbulenceScaleBias;
 
+    private Vector3 offset = new Vector3(-84.28f, 1.42f, 21.42f);
     private float heightMultiplier = 150;
-    private float fallOff = 0.05f;
+    private float fallOff = -3f;
 
 	// Noise 1 init values
-    private float n1frequency = 0.009f;
-    private float n1lacunarity = 1.365f;
-    private float n1persistence = 0.578f;
+    private float n1frequency = 0.018f;
+    private float n1lacunarity = 2.422f;
+    private float n1persistence = 0.557f;
 	private int n1octaves = 4;
-	private int n1seed = 6;
-    private float n1scale = 0.834f;
-    private float n1bias = 0.201f;
+	private int n1seed = 0;
+    private float n1scale = 0.113f;
+    private float n1bias = -0.412f;
 
     // Noise 2 init values
-    private float n2frequency = 0.04f;
-    private float n2lacunarity = 2f;
+    private float n2frequency = 0.025f;
+    private float n2lacunarity = 2.114f;
     private int n2octaves = 4;
     private int n2seed = 0;
-    private float n2scale = 0.392f;
-    private float n2bias = 0.491f;
+    private float n2scale = 0.614f;
+    private float n2bias = 0.377f;
 
     // Noise 3 init values
-    private float n3frequency = 0.009f;
-    private float n3lacunarity = 1.455f;
-    private float n3persistence = 0.377f;
-    private int n3octaves = 4;
+    private float n3frequency = 0.026f;
+    private float n3lacunarity = 1.857f;
+    private float n3persistence = 0.598f;
+    private int n3octaves = 5;
     private int n3seed = 1;
-    private float n3scale = 0.892f;
-    private float n3bias = 0.38f;
-
-    private Vector3 offset;
+    private float n3scale = 1f;
+    private float n3bias = 0.421f;
 
     void Awake () {
         noiseGenerator = new NoiseGenerator();
@@ -99,10 +97,9 @@ public class TerrainGenerator : MonoBehaviour {
 	public void GenerateTerrain() {
 		ModuleBase noiseModule;
 
-        // Select the right noise module
+        // Select noise module
         if(!combineNoise) {
             noiseModule = turbulenceModule;
-            //noiseModule = selectModule;
         }
         else {
             switch(noiseType) {
@@ -131,9 +128,10 @@ public class TerrainGenerator : MonoBehaviour {
 		// Generate mesh
         if (terrain != null)
             GameObject.DestroyImmediate(terrain);
+        
         terrain = new GameObject("Terrain");
         MeshFilter meshFilter = (MeshFilter)terrain.AddComponent(typeof(MeshFilter));
-        meshFilter.sharedMesh = MeshGenerator.createMesh(width, height, heightMultiplier, heightCurve, noiseMap).createMesh();
+        meshFilter.sharedMesh = MeshGenerator.createMeshNoSharedVertices(width, height, heightMultiplier, noiseMap).createMesh();
         MeshRenderer renderer = terrain.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
         renderer.sharedMaterial =  new Material(Shader.Find("Standard"));
 
@@ -150,7 +148,7 @@ public class TerrainGenerator : MonoBehaviour {
 		// Compute color for each pixel of texture
 		for (int y = 0; y < height - 1; y++) {
 			for(int x = 0; x < width - 1; x++) {
-				Color color = gradient.Evaluate (noiseMap [x, y]);
+                Color color = gradient.Evaluate (noiseMap [x, y]);
 				texture.SetPixel (x, y, color);
 			}
 		}
@@ -161,16 +159,18 @@ public class TerrainGenerator : MonoBehaviour {
 
     // Generate Falloff map
     private float[,] GenerateFallOffMap(float[,] heightMap) {
-        Vector2 centerOfSphere = new Vector2(width/2, height/2);
+        Vector2 centerOfCircle = new Vector2(width/2, height/2);
 
         for (int y = 0; y < height - 1; y++) {
             for(int x = 0; x < width - 1; x++) {
-                float distanceToCenter = (new Vector2(x, y) - centerOfSphere).magnitude;
-                distanceToCenter = Mathf.Clamp(distanceToCenter, 1, width);
-
-                float modifier = curve.Evaluate(1 / (distanceToCenter * fallOff));
+                float distanceToCenter = (new Vector2(x, y) - centerOfCircle).magnitude;
+                distanceToCenter = Mathf.Max(1, distanceToCenter);
+                distanceToCenter = distanceToCenter / (new Vector2(0, 0) - centerOfCircle).magnitude;
+                float modifier = (Mathf.Pow(distanceToCenter, fallOff)) / (Mathf.Pow(distanceToCenter, fallOff) + Mathf.Pow((1 - distanceToCenter), fallOff));
+                //float modifier = 1 / (distanceToCenter * distanceToCenter * fallOff);
                 modifier = Mathf.Clamp(modifier, 0, 1);
                 heightMap[x, y] = heightMap[x, y] * modifier;
+                //heightMap[x, y] = Mathf.Clamp(heightMap[x, y], 0, 1);
             }
         }
 
