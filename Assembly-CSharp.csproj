@@ -80,6 +80,7 @@
      <Compile Include="Assets\Resources\LibNoise.Unity\Properties\AssemblyInfo.cs" />
      <Compile Include="Assets\Resources\LibNoise.Unity\Utils.cs" />
      <Compile Include="Assets\Scripts\DropdownMenu.cs" />
+     <Compile Include="Assets\Scripts\MeshGenerator.cs" />
      <Compile Include="Assets\Scripts\NewBehaviourScript.cs" />
      <Compile Include="Assets\Scripts\NoiseGenerator.cs" />
      <Compile Include="Assets\Scripts\NoiseWrapper.cs" />

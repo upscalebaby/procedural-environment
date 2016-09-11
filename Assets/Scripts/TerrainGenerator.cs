@@ -14,9 +14,10 @@ public class TerrainGenerator : MonoBehaviour {
 	public int height;
 	public UnityEngine.Gradient gradient;
     public AnimationCurve curve;
+    public AnimationCurve heightCurve;
 
 	private NoiseGenerator noiseGenerator;
-    private GameObject terrainMesh;
+    private GameObject terrain;
 
 	private NoiseType noiseType;
     private bool combineNoise;
@@ -32,37 +33,57 @@ public class TerrainGenerator : MonoBehaviour {
     private Turbulence turbulenceModule;
     private ScaleBias turbulenceScaleBias;
 
-	// Init values
-    private float fallOff = 0.04f;
-	private float frequency = 0.06f;
-	private float lacunarity = 2f;
-	private float persistence = 0.5f;
-	private int octaves = 4;
-	private int seed = 0;
+    private float heightMultiplier = 150;
+    private float fallOff = 0.05f;
 
-	private float scale = 0.15f;
-	private float bias = -0.22f;
+	// Noise 1 init values
+    private float n1frequency = 0.009f;
+    private float n1lacunarity = 1.365f;
+    private float n1persistence = 0.578f;
+	private int n1octaves = 4;
+	private int n1seed = 6;
+    private float n1scale = 0.834f;
+    private float n1bias = 0.201f;
+
+    // Noise 2 init values
+    private float n2frequency = 0.04f;
+    private float n2lacunarity = 2f;
+    private int n2octaves = 4;
+    private int n2seed = 0;
+    private float n2scale = 0.392f;
+    private float n2bias = 0.491f;
+
+    // Noise 3 init values
+    private float n3frequency = 0.009f;
+    private float n3lacunarity = 1.455f;
+    private float n3persistence = 0.377f;
+    private int n3octaves = 4;
+    private int n3seed = 1;
+    private float n3scale = 0.892f;
+    private float n3bias = 0.38f;
 
     private Vector3 offset;
 
     void Awake () {
         noiseGenerator = new NoiseGenerator();
 
-        perlinModule = new Perlin(frequency, lacunarity, persistence, octaves, seed, QualityMode.High);
-        perlinScaleBiasModule = new ScaleBias(scale, bias, perlinModule);
+        //billowModule = new Voronoi(frequency, lacunarity, seed, true); //(frequency, lacunarity, persistence, octaves, seed, QualityMode.High));
+        billowModule = new Billow(n1frequency, n1lacunarity, n1persistence, n1octaves, n1seed, QualityMode.High);
+        billowScaleBiasModule = new ScaleBias(n1scale, n1bias, billowModule);
 
-        ridgedModule = new RidgedMultifractal(frequency, lacunarity, octaves, seed, QualityMode.High);
-        ridgedScaleBiasModule = new ScaleBias(scale, bias, ridgedModule);
+        ridgedModule = new RidgedMultifractal(n2frequency, n2lacunarity, n2octaves, n2seed, QualityMode.High);
+        ridgedScaleBiasModule = new ScaleBias(n2scale, n2bias, ridgedModule);
 
-        billowModule = new Billow(frequency, lacunarity, persistence, octaves, seed, QualityMode.High);
-        billowScaleBiasModule = new ScaleBias(scale, bias, billowModule);
+        perlinModule = new Perlin(n3frequency, n3lacunarity, n3persistence, n3octaves, n3seed, QualityMode.High);
+        perlinScaleBiasModule = new ScaleBias(n3scale, n3bias, perlinModule);
 
         selectModule = new Select(billowScaleBiasModule, ridgedScaleBiasModule, perlinScaleBiasModule);
-        selectModule.SetBounds(0.5, 1000);
-        selectModule.FallOff = 0.125;
+        selectModule.SetBounds(0.5, 1000);  // parameterize?
+        selectModule.FallOff = 0.3928571;
 
-        turbulenceModule = new Turbulence(selectModule);
-        turbulenceScaleBias = new ScaleBias(scale, bias, turbulenceModule);
+        turbulenceModule = new Turbulence(0.335, selectModule);
+        turbulenceModule.Frequency = 4.742f;
+        turbulenceScaleBias = new ScaleBias(n1scale, n1bias, turbulenceModule);
     }
 
 	// Use this for initialization
@@ -79,9 +100,9 @@ public class TerrainGenerator : MonoBehaviour {
 		ModuleBase noiseModule;
 
         // Select the right noise module
-        if(combineNoise) {
-            //noiseModule = turbulenceScaleBias;
-            noiseModule = selectModule;
+        if(!combineNoise) {
+            noiseModule = turbulenceModule;
+            //noiseModule = selectModule;
         }
         else {
             switch(noiseType) {
@@ -108,15 +129,19 @@ public class TerrainGenerator : MonoBehaviour {
 		Texture2D texture = GenerateTexture (noiseMap);
 
 		// Generate mesh
-		if(terrainMesh == null) {
-			terrainMesh = GameObject.CreatePrimitive (PrimitiveType.Plane);
-		}
+        if (terrain != null)
+            GameObject.DestroyImmediate(terrain);
+        terrain = new GameObject("Terrain");
+        MeshFilter meshFilter = (MeshFilter)terrain.AddComponent(typeof(MeshFilter));
+        meshFilter.sharedMesh = MeshGenerator.createMesh(width, height, heightMultiplier, heightCurve, noiseMap).createMesh();
+        MeshRenderer renderer = terrain.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
+        renderer.sharedMaterial =  new Material(Shader.Find("Standard"));
 
 		// Apply texture to mesh
-		terrainMesh.GetComponent<Renderer> ().sharedMaterial.mainTexture = texture;
+        terrain.GetComponent<MeshRenderer>().sharedMaterial.mainTexture = texture;
 
-		// Scale mesh to width and height
-		terrainMesh.GetComponent<Renderer> ().transform.localScale = new Vector3 (width , 1, height);
+		// Scale mesh
+		terrain.GetComponent<Renderer> ().transform.localScale = new Vector3 (width/10 , 1, height/10);
 	}
 
 	Texture2D GenerateTexture(float[,] noiseMap) {
@@ -161,6 +186,11 @@ public class TerrainGenerator : MonoBehaviour {
 
     public void ToggleCombinedNoise() {
         this.combineNoise = !this.combineNoise;
+        GenerateTerrain ();
+    }
+
+    public void SetHeightMultiplier(float input) {
+        this.heightMultiplier = input;
         GenerateTerrain ();
     }
 
