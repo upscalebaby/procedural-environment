@@ -7,6 +7,7 @@ public class DropdownMenu : MonoBehaviour {
 	public GameObject ridgedUI;
 	public GameObject billowUI;
     public GameObject combinedUI;
+    public GameObject waterUI;
 	public Dropdown menu;
 	public TerrainGenerator terrainGenerator;
 
@@ -41,18 +42,28 @@ public class DropdownMenu : MonoBehaviour {
                 ActivateCombinedUI ();
                 terrainGenerator.SetNoiseType (TerrainGenerator.NoiseType.Combined);
                 break;
+            case 4:
+                ActivateWaterUI ();
+                break;
 			}
 
 		terrainGenerator.GenerateTerrain ();
 	}
 
-
+    void ActivateWaterUI () {
+        perlinUI.SetActive (false);
+        ridgedUI.SetActive (false);
+        billowUI.SetActive (false);
+        combinedUI.SetActive(false);
+        waterUI.SetActive(true);
+    }
 
 	void ActivatePerlinUI() {
 		perlinUI.SetActive (true);
 		ridgedUI.SetActive (false);
 		billowUI.SetActive (false);
         combinedUI.SetActive(false);
+        waterUI.SetActive(false);
 	}
 
 	void ActivateRidgeUI() {
@@ -60,6 +71,7 @@ public class DropdownMenu : MonoBehaviour {
 		ridgedUI.SetActive (true);
 		billowUI.SetActive (false);
         combinedUI.SetActive(false);
+        waterUI.SetActive(false);
 	}
 
 	void ActivateBillowUI() {
@@ -67,6 +79,7 @@ public class DropdownMenu : MonoBehaviour {
 		ridgedUI.SetActive (false);
 		billowUI.SetActive (true);
         combinedUI.SetActive(false);
+        waterUI.SetActive(false);
 	}
 
     void ActivateCombinedUI () {
@@ -74,6 +87,7 @@ public class DropdownMenu : MonoBehaviour {
         ridgedUI.SetActive (false);
         billowUI.SetActive (false);
         combinedUI.SetActive (true);
+        waterUI.SetActive(false);
     }
 
 

@@ -14,6 +14,9 @@ public class TerrainGenerator : MonoBehaviour {
 	public int height;
 	public UnityEngine.Gradient gradient;
     public AnimationCurve curve;
+    public float meshScale = 10f;
+
+    public float maxHeight;
 
 	private NoiseGenerator noiseGenerator;
     private GameObject terrain;
@@ -27,10 +30,13 @@ public class TerrainGenerator : MonoBehaviour {
     private RidgedMultifractal ridgedModule;
     private ScaleBias ridgedScaleBiasModule;
 	private Billow billowModule;
+    //private Voronoi billowModule;
     private ScaleBias billowScaleBiasModule;
 	private Select selectModule;
     private Turbulence turbulenceModule;
     private ScaleBias turbulenceScaleBias;
+
+    private WaterGenerator waterGenerator;
 
     private Vector3 offset = new Vector3(-84.28f, 1.42f, 21.42f);
     private float heightMultiplier = 150;
@@ -65,8 +71,8 @@ public class TerrainGenerator : MonoBehaviour {
     void Awake () {
         noiseGenerator = new NoiseGenerator();
 
-        //billowModule = new Voronoi(frequency, lacunarity, seed, true); //(frequency, lacunarity, persistence, octaves, seed, QualityMode.High));
-        billowModule = new Billow(n1frequency, n1lacunarity, n1persistence, n1octaves, n1seed, QualityMode.High);
+        billowModule = new Billow(n1frequency, n1lacunarity, n1persistence, n1octaves, n1seed, QualityMode.High); //(frequency, lacunarity, persistence, octaves, seed, QualityMode.High));
+        //billowModule = new Voronoi(n1frequency, n1lacunarity, n1seed, true);
         billowScaleBiasModule = new ScaleBias(n1scale, n1bias, billowModule);
 
         ridgedModule = new RidgedMultifractal(n2frequency, n2lacunarity, n2octaves, n2seed, QualityMode.High);
@@ -82,6 +88,10 @@ public class TerrainGenerator : MonoBehaviour {
         turbulenceModule = new Turbulence(0.335, selectModule);
         turbulenceModule.Frequency = 4.742f;
         turbulenceScaleBias = new ScaleBias(n1scale, n1bias, turbulenceModule);
+
+        currentModule = billowScaleBiasModule;
+
+        waterGenerator = GameObject.FindObjectOfType<WaterGenerator> ();
     }
 
 	// Use this for initialization
@@ -95,67 +105,82 @@ public class TerrainGenerator : MonoBehaviour {
 	}
 
 	public void GenerateTerrain() {
-		ModuleBase noiseModule;
-
+        
         // Select noise module
         if(!combineNoise) {
-            noiseModule = turbulenceModule;
+            currentModule = turbulenceModule;
         }
         else {
             switch(noiseType) {
                 case NoiseType.Perlin:
-                    noiseModule = perlinScaleBiasModule;
+                    currentModule = perlinScaleBiasModule;
                     break;
                 case NoiseType.RidgedMultifractal:
-                    noiseModule = ridgedScaleBiasModule;
+                    currentModule = ridgedScaleBiasModule;
                     break;
                 case NoiseType.Billow:
-                    noiseModule = billowScaleBiasModule;
+                    currentModule = billowScaleBiasModule;
                     break;
                 default:
-                    noiseModule = perlinScaleBiasModule;
+                    currentModule = perlinScaleBiasModule;
                     break;
             }
         }
 
 		// Generate noiseMap and Falloff map
-        float[,] noiseMap = noiseGenerator.GenerateNoise (width, height, offset, noiseModule);
+        float[,] noiseMap = noiseGenerator.GenerateNoise (width, height, offset, currentModule);
         noiseMap = GenerateFallOffMap(noiseMap);
 
 		// Generate texture
-		Texture2D texture = GenerateTexture (noiseMap);
+		//Texture2D texture = GenerateTexture (noiseMap);
 
 		// Generate mesh
-        if (terrain != null)
-            GameObject.DestroyImmediate(terrain);
+        if (terrain == null) {
+            terrain = new GameObject("Terrain");
+
+            MeshFilter meshFilter = (MeshFilter)terrain.AddComponent(typeof(MeshFilter));
+            meshFilter.mesh = MeshGenerator.createMesh(width, height, heightMultiplier, noiseMap).createMesh();
+
+            meshFilter.mesh.colors = ColorVertices(meshFilter.mesh);
+            MeshRenderer renderer = terrain.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
+            renderer.material =  new Material(Shader.Find("Custom/TerrainShader"));
+
+            MeshGenerator.MeshData meshData = MeshGenerator.createMesh(width, height, heightMultiplier, noiseMap);
+
+            // Scale mesh
+            terrain.GetComponent<Renderer> ().transform.localScale = new Vector3 (width/meshScale , 1, height/meshScale);
+
+            //Find good water level
+            maxHeight = meshData.maxHeight;
+        } else {
+            maxHeight = MeshGenerator.editMesh(width, height, heightMultiplier, noiseMap, terrain.GetComponent<MeshFilter>().mesh);
+            terrain.GetComponent<MeshFilter>().mesh.colors = ColorVertices(terrain.GetComponent<MeshFilter>().mesh);
+            waterGenerator.GenerateWater();
+        }
+
+
+
+	}
         
-        terrain = new GameObject("Terrain");
-        MeshFilter meshFilter = (MeshFilter)terrain.AddComponent(typeof(MeshFilter));
-        meshFilter.sharedMesh = MeshGenerator.createMeshNoSharedVertices(width, height, heightMultiplier, noiseMap).createMesh();
-        MeshRenderer renderer = terrain.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
-        renderer.sharedMaterial =  new Material(Shader.Find("Standard"));
+    private Color[] ColorVertices(Mesh mesh) {
+        int length = mesh.vertices.Length;
+        Color[] colors = new Color[length];
+        Vector3[] vertices = mesh.vertices;
 
-		// Apply texture to mesh
-        terrain.GetComponent<MeshRenderer>().sharedMaterial.mainTexture = texture;
+        // Find maximum height to make color relative to highest point
+        float max = -99999f;
+        for (int i = 0; i < length; i++) {
+            if (vertices[i].y > max)
+                max = vertices[i].y;
+        }
 
-		// Scale mesh
-		terrain.GetComponent<Renderer> ().transform.localScale = new Vector3 (width/10 , 1, height/10);
-	}
+        for (int i = 0; i < length; i++) {
+            colors[i] = gradient.Evaluate(vertices[i].y / max);
+        }
 
-	Texture2D GenerateTexture(float[,] noiseMap) {
-		Texture2D texture = new Texture2D (width, height);
+        return colors;
 
-		// Compute color for each pixel of texture
-		for (int y = 0; y < height - 1; y++) {
-			for(int x = 0; x < width - 1; x++) {
-                Color color = gradient.Evaluate (noiseMap [x, y]);
-				texture.SetPixel (x, y, color);
-			}
-		}
-
-		texture.Apply ();
-		return texture;
-	}
+    }
 
     // Generate Falloff map
     private float[,] GenerateFallOffMap(float[,] heightMap) {
@@ -167,7 +192,6 @@ public class TerrainGenerator : MonoBehaviour {
                 distanceToCenter = Mathf.Max(1, distanceToCenter);
                 distanceToCenter = distanceToCenter / (new Vector2(0, 0) - centerOfCircle).magnitude;
                 float modifier = (Mathf.Pow(distanceToCenter, fallOff)) / (Mathf.Pow(distanceToCenter, fallOff) + Mathf.Pow((1 - distanceToCenter), fallOff));
-                //float modifier = 1 / (distanceToCenter * distanceToCenter * fallOff);
                 modifier = Mathf.Clamp(modifier, 0, 1);
                 heightMap[x, y] = heightMap[x, y] * modifier;
                 //heightMap[x, y] = Mathf.Clamp(heightMap[x, y], 0, 1);
@@ -181,6 +205,7 @@ public class TerrainGenerator : MonoBehaviour {
 	// Setters for UI elements
 	public void SetNoiseType(NoiseType type) {
 		this.noiseType = type;
+        GenerateTerrain ();
 
 	}
 
@@ -209,6 +234,7 @@ public class TerrainGenerator : MonoBehaviour {
                 turbulenceModule.Frequency = input;
                 break;
 		}
+        GenerateTerrain ();
 	}
 
 	public void SetLacunarity(float input) {
@@ -223,6 +249,7 @@ public class TerrainGenerator : MonoBehaviour {
 				perlinModule.Lacunarity = input;
 				break;
 		}
+        GenerateTerrain ();
 	}
 
 	public void SetPersistence(float input) {
@@ -234,6 +261,7 @@ public class TerrainGenerator : MonoBehaviour {
 				perlinModule.Persistence = input;
 				break;
 		}
+        GenerateTerrain ();
 	}
 
 	public void SetOctaves(float i) {
@@ -250,6 +278,7 @@ public class TerrainGenerator : MonoBehaviour {
 				perlinModule.OctaveCount = input;
 				break;
 		}
+        GenerateTerrain ();
 	}
 
 	public void SetSeed(float i) {
@@ -269,6 +298,7 @@ public class TerrainGenerator : MonoBehaviour {
                 turbulenceModule.Seed = input;
                 break;
 		}
+        GenerateTerrain ();
 	}
 
 	public void SetScale(float input) {
@@ -286,6 +316,7 @@ public class TerrainGenerator : MonoBehaviour {
                 turbulenceScaleBias.Scale = input;
                 break;
         }
+        GenerateTerrain ();
 	}
 
 	public void SetBias(float input) {
@@ -304,35 +335,43 @@ public class TerrainGenerator : MonoBehaviour {
                 break;
 
         }
+        GenerateTerrain ();
 	}
 
     public void SetX(float input) {
         offset.x = input;
+        GenerateTerrain ();
     }
 
     public void SetY(float input) {
         offset.y = input;
+        GenerateTerrain ();
     }
 
     public void SetZ(float input) {
         offset.z = input;
+        GenerateTerrain ();
     }
 
     public void SetPower(float input) {
         turbulenceModule.Power = input;
+        GenerateTerrain ();
     }
 
     public void SetRoughness(float i) {
         int input = (int) i;
         turbulenceModule.Roughness = input;
+        GenerateTerrain ();
     }
         
     public void SetFallOff(float input) {
         this.fallOff = input;
+        GenerateTerrain ();
     }
 
     public void SetCrossover(float input) {
         selectModule.FallOff = input;
+        GenerateTerrain ();
     }
 		
 }

@@ -99,6 +99,10 @@
     <Compile Include="Assets\Editor\TerrainGeneratorEditor.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\Materials\SimplexNoise.cginc" />
+    <None Include="Assets\Materials\Vertex Animation.shader" />
+    <None Include="Assets\Materials\Vertex Colored.shader" />
+    <None Include="Assets\Materials\WaterShader.shader" />
     <None Include="Assets\Resources\LibNoise.Unity\COPYING.LESSER.txt" />
     <None Include="Assets\Resources\LibNoise.Unity\COPYING.txt" />
   </ItemGroup>
