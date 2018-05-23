@@ -46,12 +46,14 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\Editor\TerrainGeneratorEditor.cs" />
+     <None Include="Assets\Materials\CloudShader2.shader" />
      <None Include="Assets\Materials\TerrainShader.shader" />
      <None Include="Assets\Resources\LibNoise.Unity\COPYING.txt" />
      <None Include="Assets\Materials\Vertex Animation.shader" />
      <None Include="Assets\Resources\LibNoise.Unity\COPYING.LESSER.txt" />
      <None Include="Assets\Materials\SimplexNoise.cginc" />
      <None Include="Assets\Materials\WaterGeometryShader.shader" />
+     <None Include="Assets\Materials\CloudShader.shader" />
      <None Include="Assets\Materials\WaterShader.shader" />
  <Reference Include="UnityEditor.Advertisements">
  <HintPath>C:/Unity 5.4.0b11/Editor/Data/UnityExtensions/Unity/Advertisements/Editor/UnityEditor.Advertisements.dll</HintPath>

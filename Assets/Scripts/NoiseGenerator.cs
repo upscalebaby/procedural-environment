@@ -16,7 +16,7 @@ public class NoiseGenerator {
                 float sampleZ = offset.z;
 
 				noiseMap[x, y] = (float )module.GetValue (sampleX, sampleY, sampleZ);
-                noiseMap[x, y] = Mathf.Clamp(noiseMap[x, y], -1f, 1f);
+                //noiseMap[x, y] = Mathf.Clamp(noiseMap[x, y], -1f, 1f);
 
 				// Convert range from [-1, 1] to [0, 1] for now
 				noiseMap [x, y] = (noiseMap [x, y] + 1f) / 2f;

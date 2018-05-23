@@ -131,9 +131,6 @@ public class TerrainGenerator : MonoBehaviour {
         float[,] noiseMap = noiseGenerator.GenerateNoise (width, height, offset, currentModule);
         noiseMap = GenerateFallOffMap(noiseMap);
 
-		// Generate texture
-		//Texture2D texture = GenerateTexture (noiseMap);
-
 		// Generate mesh
         if (terrain == null) {
             terrain = new GameObject("Terrain");
@@ -208,6 +205,26 @@ public class TerrainGenerator : MonoBehaviour {
         GenerateTerrain ();
 
 	}
+
+    public void SetFallOff(float input) {
+        this.fallOff = input;
+        GenerateTerrain ();
+    }
+
+    public void SetX(float input) {
+        offset.x = input;
+        GenerateTerrain ();
+    }
+
+    public void SetY(float input) {
+        offset.y = input;
+        GenerateTerrain ();
+    }
+
+    public void SetZ(float input) {
+        offset.z = input;
+        GenerateTerrain ();
+    }
 
     public void ToggleCombinedNoise() {
         this.combineNoise = !this.combineNoise;
@@ -338,37 +355,22 @@ public class TerrainGenerator : MonoBehaviour {
         GenerateTerrain ();
 	}
 
-    public void SetX(float input) {
-        offset.x = input;
+    public void SetTurbulenceFrequency(float input) {
+        turbulenceModule.Frequency = input;
         GenerateTerrain ();
     }
 
-    public void SetY(float input) {
-        offset.y = input;
-        GenerateTerrain ();
-    }
-
-    public void SetZ(float input) {
-        offset.z = input;
-        GenerateTerrain ();
-    }
-
-    public void SetPower(float input) {
+    public void SetTurbulencePower(float input) {
         turbulenceModule.Power = input;
         GenerateTerrain ();
     }
 
-    public void SetRoughness(float i) {
+    public void SetTurbulenceRoughness(float i) {
         int input = (int) i;
         turbulenceModule.Roughness = input;
         GenerateTerrain ();
     }
         
-    public void SetFallOff(float input) {
-        this.fallOff = input;
-        GenerateTerrain ();
-    }
-
     public void SetCrossover(float input) {
         selectModule.FallOff = input;
         GenerateTerrain ();

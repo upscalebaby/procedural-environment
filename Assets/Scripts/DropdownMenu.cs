@@ -3,13 +3,14 @@ using System.Collections;
 using UnityEngine.UI;
 
 public class DropdownMenu : MonoBehaviour {
-	public GameObject perlinUI;
-	public GameObject ridgedUI;
-	public GameObject billowUI;
-    public GameObject combinedUI;
-    public GameObject waterUI;
 	public Dropdown menu;
 	public TerrainGenerator terrainGenerator;
+
+    public GameObject noise1UI;
+    public GameObject noise2UI;
+    public GameObject combinedUI;
+    public GameObject waterUI;
+    public GameObject cloudUI;
 
 	// Use this for initialization
 	void Start () {
@@ -26,70 +27,68 @@ public class DropdownMenu : MonoBehaviour {
 
 		switch(i) {
 			case 0:
-                ActivateBillowUI ();
+                ActivateNoise1UI ();
                 terrainGenerator.SetNoiseType (TerrainGenerator.NoiseType.Billow);
                 break;
 				
             case 1:
-                ActivateRidgeUI ();
-                terrainGenerator.SetNoiseType(TerrainGenerator.NoiseType.RidgedMultifractal);
+                ActivateNoise2UI ();
+                terrainGenerator.SetNoiseType (TerrainGenerator.NoiseType.RidgedMultifractal);
 				break;
 			case 2:
-                ActivatePerlinUI ();
+                ActivateCombinedUI ();
                 terrainGenerator.SetNoiseType (TerrainGenerator.NoiseType.Perlin);
                 break;
             case 3:
-                ActivateCombinedUI ();
-                terrainGenerator.SetNoiseType (TerrainGenerator.NoiseType.Combined);
-                break;
-            case 4:
                 ActivateWaterUI ();
                 break;
-			}
+            case 4:
+                ActivateCloudUI ();
+                break;
+        }
 
 		terrainGenerator.GenerateTerrain ();
+
 	}
+        
+	void ActivateNoise1UI() {
+		noise1UI.SetActive (true);
+        noise2UI.SetActive (false);
+        combinedUI.SetActive(false);
+        waterUI.SetActive(false);
+        cloudUI.SetActive(false);
+	}
+
+    void ActivateNoise2UI() {
+        noise1UI.SetActive (false);
+        noise2UI.SetActive (true);
+        combinedUI.SetActive(false);
+        waterUI.SetActive(false);
+        cloudUI.SetActive(false);
+    }
+
+    void ActivateCombinedUI() {
+        noise1UI.SetActive (false);
+        noise2UI.SetActive (false);
+        combinedUI.SetActive(true);
+        waterUI.SetActive(false);
+        cloudUI.SetActive(false);
+    }
 
     void ActivateWaterUI () {
-        perlinUI.SetActive (false);
-        ridgedUI.SetActive (false);
-        billowUI.SetActive (false);
+        noise1UI.SetActive (false);
+        noise2UI.SetActive (false);
         combinedUI.SetActive(false);
         waterUI.SetActive(true);
+        cloudUI.SetActive(false);
     }
 
-	void ActivatePerlinUI() {
-		perlinUI.SetActive (true);
-		ridgedUI.SetActive (false);
-		billowUI.SetActive (false);
+    void ActivateCloudUI () {
+        noise1UI.SetActive (false);
+        noise2UI.SetActive (false);
         combinedUI.SetActive(false);
         waterUI.SetActive(false);
-	}
-
-	void ActivateRidgeUI() {
-		perlinUI.SetActive (false);
-		ridgedUI.SetActive (true);
-		billowUI.SetActive (false);
-        combinedUI.SetActive(false);
-        waterUI.SetActive(false);
-	}
-
-	void ActivateBillowUI() {
-		perlinUI.SetActive (false);
-		ridgedUI.SetActive (false);
-		billowUI.SetActive (true);
-        combinedUI.SetActive(false);
-        waterUI.SetActive(false);
-	}
-
-    void ActivateCombinedUI () {
-        perlinUI.SetActive (false);
-        ridgedUI.SetActive (false);
-        billowUI.SetActive (false);
-        combinedUI.SetActive (true);
-        waterUI.SetActive(false);
+        cloudUI.SetActive(true);
     }
-
-
 
 }
